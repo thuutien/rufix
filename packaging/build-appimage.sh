@@ -18,7 +18,8 @@ find "$WORK" -name '__pycache__' -type d -prune -exec rm -rf {} +
 find "$WORK" -name '*.pyc' -delete
 cp "$SRC/data/rufix.desktop" "$WORK/rufix.desktop"
 cp "$SRC/data/rufix.svg" "$WORK/rufix.svg"
-cp "$SRC/data/rufix.svg" "$WORK/.DirIcon"
+cp "$SRC/data/rufix.png" "$WORK/rufix.png"
+cp "$SRC/data/rufix.png" "$WORK/.DirIcon"
 cat > "$WORK/AppRun" <<'APPRUN'
 #!/bin/sh
 APPDIR="$(dirname "$(readlink -f "$0")")"

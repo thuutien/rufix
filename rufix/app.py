@@ -19,6 +19,10 @@ import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gio, GLib, Gtk, Pango  # noqa: E402
+try:
+    from gi.repository import GdkPixbuf
+except Exception:  # pragma: no cover - GTK without GdkPixbuf is unusable anyway
+    GdkPixbuf = None  # type: ignore
 
 from . import APP_ID, APP_NAME, __version__, updater  # noqa: E402
 from .devices import (FLATPAK, Device, host_command, host_path, human_size,  # noqa: E402
@@ -61,12 +65,54 @@ CLUSTERS = {
 CSS = b"""
 .section-title { font-weight: bold; font-size: 115%; }
 .section-sep { margin-top: 4px; }
+.app-header { padding: 2px 0; }
+.app-title { font-weight: bold; font-size: 150%; }
 .status-bar { padding: 4px 8px; }
 progressbar.ready progress { background-color: #4caf50; border-color: #3e8e41; }
 progressbar.failed progress { background-color: #d9534f; border-color: #b52b27; }
 progressbar trough, progressbar progress { min-height: 22px; }
 .start-button { font-weight: bold; }
 """
+
+
+def app_logo_image(px: int = 48) -> Gtk.Image | None:
+    """Official RUFIX logo as a Gtk.Image, for the app header.
+
+    Prefers the installed ``rufix`` icon theme entry, then falls back to
+    ``data/rufix.png`` (or ``.svg``) next to the source tree so running
+    from source works too.
+    """
+    try:
+        theme = Gtk.IconTheme.get_default()
+        if theme is not None and theme.has_icon("rufix"):
+            try:
+                pix = theme.load_icon("rufix", px, 0)
+                if pix is not None:
+                    return Gtk.Image.new_from_pixbuf(pix)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    base = os.path.join(os.path.dirname(HERE), "data")
+    for name in ("rufix.png", "rufix.svg"):
+        path = os.path.join(base, name)
+        if not os.path.exists(path):
+            continue
+        try:
+            if name.endswith(".png") and GdkPixbuf is not None:
+                pix = GdkPixbuf.Pixbuf.new_from_file_at_size(path, px, px)
+            else:
+                pix = GdkPixbuf.Pixbuf.new_from_file_at_size(path, px, px) \
+                    if GdkPixbuf is not None else None
+            if pix is not None:
+                return Gtk.Image.new_from_pixbuf(pix)
+        except Exception:
+            continue
+        try:
+            return Gtk.Image.new_from_file(path)
+        except Exception:
+            continue
+    return None
 
 
 def cluster_text(n: int) -> str:
@@ -295,9 +341,14 @@ class RufixWindow(Gtk.ApplicationWindow):
         if Gtk.IconTheme.get_default().has_icon("rufix"):
             self.set_icon_name("rufix")
         else:
-            src_icon = os.path.join(os.path.dirname(HERE), "data", "rufix.svg")
-            if os.path.exists(src_icon):
-                self.set_icon_from_file(src_icon)
+            for name in ("rufix.png", "rufix.svg"):
+                src_icon = os.path.join(os.path.dirname(HERE), "data", name)
+                if os.path.exists(src_icon):
+                    try:
+                        self.set_icon_from_file(src_icon)
+                    except Exception:
+                        continue
+                    break
 
         self.devices: List[Device] = []
         self.device_sig = None
@@ -397,6 +448,23 @@ class RufixWindow(Gtk.ApplicationWindow):
     # ------------------------------------------------------------------ UI
     def _build(self):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        # ---- App header with the official logo
+        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        header.get_style_context().add_class("app-header")
+        header.set_border_width(12)
+        logo = app_logo_image(48)
+        if logo is not None:
+            header.pack_start(logo, False, False, 0)
+        titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        title = Gtk.Label(label="RUFIX", xalign=0)
+        title.get_style_context().add_class("app-title")
+        subtitle = Gtk.Label(label="A Rufus-style USB tool for Linux", xalign=0)
+        subtitle.get_style_context().add_class("dim-label")
+        titles.pack_start(title, False, False, 0)
+        titles.pack_start(subtitle, False, False, 0)
+        header.pack_start(titles, True, True, 0)
+        outer.pack_start(header, False, False, 0)
+        outer.pack_start(Gtk.Separator(), False, False, 0)
         self.notebook = Gtk.Notebook()
         self.notebook.set_show_border(False)
         outer.pack_start(self.notebook, True, True, 0)
@@ -989,7 +1057,21 @@ class RufixWindow(Gtk.ApplicationWindow):
         dlg = Gtk.AboutDialog(transient_for=self, modal=True)
         dlg.set_program_name(APP_NAME)
         dlg.set_version(__version__)
-        dlg.set_logo_icon_name("rufix")
+        logo = None
+        for name in ("rufix.png", "rufix.svg"):
+            path = os.path.join(os.path.dirname(HERE), "data", name)
+            if os.path.exists(path) and name.endswith(".png"):
+                try:
+                    from gi.repository import GdkPixbuf
+                    pix = GdkPixbuf.Pixbuf.new_from_file_at_size(path, 96, 96)
+                    logo = pix
+                    break
+                except Exception:
+                    continue
+        if logo is not None:
+            dlg.set_logo(logo)
+        else:
+            dlg.set_logo_icon_name("rufix")
         dlg.set_comments("Create bootable USB drives and format USB keys on Linux.\n"
                          "Inspired by Rufus (rufus.ie).")
         dlg.set_license_type(Gtk.License.GPL_3_0)

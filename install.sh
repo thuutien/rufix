@@ -17,11 +17,12 @@ done
 LIB="$ROOT/usr/lib/rufix"
 BIN="$ROOT/usr/bin/rufix"
 DESKTOP="$ROOT/usr/share/applications/rufix.desktop"
-ICON="$ROOT/usr/share/icons/hicolor/scalable/apps/rufix.svg"
+ICON_SVG="$ROOT/usr/share/icons/hicolor/scalable/apps/rufix.svg"
+ICON_PNG="$ROOT/usr/share/icons/hicolor/512x512/apps/rufix.png"
 POLICY="$ROOT/usr/share/polkit-1/actions/org.rufix.helper.policy"
 
 if [ "$UNINSTALL" = 1 ]; then
-    rm -rf "$LIB" "$BIN" "$DESKTOP" "$ICON" "$POLICY"
+    rm -rf "$LIB" "$BIN" "$DESKTOP" "$ICON_SVG" "$ICON_PNG" "$POLICY"
     echo "Rufix uninstalled."
     exit 0
 fi
@@ -41,7 +42,8 @@ sed '1s|.*|#!/usr/bin/python3|' "$SRC/rufix/helper.py" > "$LIB/rufix-helper"
 chmod 755 "$LIB/rufix-helper"
 install -D -m 755 "$SRC/data/rufix-launcher" "$BIN"
 install -D -m 644 "$SRC/data/rufix.desktop" "$DESKTOP"
-install -D -m 644 "$SRC/data/rufix.svg" "$ICON"
+install -D -m 644 "$SRC/data/rufix.svg" "$ICON_SVG"
+install -D -m 644 "$SRC/data/rufix.png" "$ICON_PNG"
 install -D -m 644 "$SRC/data/org.rufix.helper.policy" "$POLICY"
 
 if [ -z "$ROOT" ]; then

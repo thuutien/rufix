@@ -49,6 +49,7 @@ sh install.sh --prefix-root %{buildroot}
 /usr/lib/rufix/
 /usr/share/applications/rufix.desktop
 /usr/share/icons/hicolor/scalable/apps/rufix.svg
+/usr/share/icons/hicolor/512x512/apps/rufix.png
 /usr/share/polkit-1/actions/org.rufix.helper.policy
 
 %changelog

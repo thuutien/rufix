@@ -1,5 +1,9 @@
 # Rufix
 
+<p align="center">
+  <img src="data/rufix.png" alt="Rufix official logo — bootable USB tool for Linux" width="600">
+</p>
+
 [![AUR version](https://img.shields.io/aur/version/rufix)](https://aur.archlinux.org/packages/rufix)
 
 A Rufus-style USB formatting and bootable-drive tool for **Linux**, built

@@ -24,11 +24,13 @@ modules:
       - install -d /app/lib/rufix/rufix /app/lib/rufix/data
       - install -m 644 rufix/*.py /app/lib/rufix/rufix/
       - install -m 644 data/rufix.svg /app/lib/rufix/data/
+      - install -m 644 data/rufix.png /app/lib/rufix/data/
       - sed 's|/usr/lib/rufix|/app/lib/rufix|' data/rufix-launcher > rufix-launcher
       - install -Dm755 rufix-launcher /app/bin/rufix
       - install -Dm644 data/rufix.desktop /app/share/applications/org.rufix.Rufix.desktop
       - desktop-file-edit --set-icon=org.rufix.Rufix /app/share/applications/org.rufix.Rufix.desktop
       - install -Dm644 data/rufix.svg /app/share/icons/hicolor/scalable/apps/org.rufix.Rufix.svg
+      - install -Dm644 data/rufix.png /app/share/icons/hicolor/512x512/apps/org.rufix.Rufix.png
     sources:
       - type: dir
         path: ../..
